@@ -27,25 +27,20 @@ export const setupAuth = () => {
   const callbackURL = new URL('/api/auth/google/callback', appUrl).toString();
   console.log(`Using callback URL: ${callbackURL}`);
 
-  // Create alternate callback URLs for fallback
-  const devCallbackUrl = `https://${process.env.REPL_SLUG}.${process.env.REPL_OWNER}.replit.dev/api/auth/google/callback`;
-  
+  // Use a callback URL that will be overridden by the request parameter
   passport.use(
     new GoogleStrategy(
       {
         clientID: process.env.GOOGLE_CLIENT_ID || '',
         clientSecret: process.env.GOOGLE_CLIENT_SECRET || '',
         callbackURL,
-        // Allow both the main URL and the dev URL as callback URLs
-        callbackURLs: [
-          callbackURL,
-          devCallbackUrl
-        ],
+        // Passreqtocallback allows us to use the request object in the strategy
+        passReqToCallback: true,
         scope: ['profile', 'email'],
         // Allow only users from the workspace domain if specified
         ...(process.env.GOOGLE_WORKSPACE_DOMAIN && { hd: process.env.GOOGLE_WORKSPACE_DOMAIN }),
       },
-      async (accessToken, refreshToken, profile, done) => {
+      async (req, accessToken, refreshToken, profile, done) => {
         try {
           // Check if the user already exists
           let user = await storage.getUserByGoogleId(profile.id);

@@ -45,7 +45,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.use(passport.session());
 
   // Auth routes
-  app.get("/api/auth/google", passport.authenticate("google"));
+  app.get("/api/auth/google", (req, res, next) => {
+    // Get the host from the request
+    const host = req.headers.host || 'localhost:5000';
+    const protocol = req.headers['x-forwarded-proto'] || 'http';
+    
+    // Explicitly set the callback URL for this specific request
+    const callbackURL = `${protocol}://${host}/api/auth/google/callback`;
+    console.log(`Using explicit callback URL for this request: ${callbackURL}`);
+    
+    // Pass the callback URL as state to be verified later
+    passport.authenticate('google', { 
+      state: Buffer.from(JSON.stringify({ callbackURL })).toString('base64')
+    })(req, res, next);
+  });
 
   app.get(
     "/api/auth/google/callback",
