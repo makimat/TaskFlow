@@ -4,21 +4,43 @@ import { storage } from './storage';
 
 export const setupAuth = () => {
   // Configure Passport to use Google OAuth
-  // Get URL from environment or determine dynamically
-  const appUrl = process.env.APP_URL || 
-    (process.env.REPL_SLUG && process.env.REPL_OWNER 
-      ? `https://${process.env.REPL_SLUG}.${process.env.REPL_OWNER}.replit.dev`
-      : 'http://localhost:5000');
+  // Try multiple approaches to determine the correct URL
+  let appUrl = process.env.APP_URL;
   
+  // If no APP_URL is set, try to determine it from the request
+  if (!appUrl) {
+    // For the Replit environment
+    if (process.env.REPL_SLUG && process.env.REPL_OWNER) {
+      // First try the .replit.app domain (for deployed apps)
+      appUrl = `https://${process.env.REPL_SLUG}-${process.env.REPL_OWNER}.replit.app`;
+      
+      // Alternatively, use the dev URL format
+      const devUrl = `https://${process.env.REPL_SLUG}.${process.env.REPL_OWNER}.replit.dev`;
+      console.log(`Also supporting dev URL: ${devUrl}`);
+    } else {
+      // Local development
+      appUrl = 'http://localhost:5000';
+    }
+  }
+  
+  // Create the callback URL
   const callbackURL = new URL('/api/auth/google/callback', appUrl).toString();
   console.log(`Using callback URL: ${callbackURL}`);
 
+  // Create alternate callback URLs for fallback
+  const devCallbackUrl = `https://${process.env.REPL_SLUG}.${process.env.REPL_OWNER}.replit.dev/api/auth/google/callback`;
+  
   passport.use(
     new GoogleStrategy(
       {
         clientID: process.env.GOOGLE_CLIENT_ID || '',
         clientSecret: process.env.GOOGLE_CLIENT_SECRET || '',
         callbackURL,
+        // Allow both the main URL and the dev URL as callback URLs
+        callbackURLs: [
+          callbackURL,
+          devCallbackUrl
+        ],
         scope: ['profile', 'email'],
         // Allow only users from the workspace domain if specified
         ...(process.env.GOOGLE_WORKSPACE_DOMAIN && { hd: process.env.GOOGLE_WORKSPACE_DOMAIN }),

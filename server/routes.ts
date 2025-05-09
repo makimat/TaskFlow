@@ -49,10 +49,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get(
     "/api/auth/google/callback",
-    passport.authenticate("google", {
-      successRedirect: "/",
-      failureRedirect: "/login",
-    })
+    (req, res, next) => {
+      // Log the callback URL for debugging
+      console.log(`Handling callback at: ${req.originalUrl}`);
+      
+      // Custom callback to handle authentication result
+      passport.authenticate("google", (err, user, info) => {
+        if (err) {
+          console.error("Authentication error:", err);
+          return res.redirect("/login?error=auth_error");
+        }
+        
+        if (!user) {
+          console.error("Authentication failed, no user:", info);
+          return res.redirect("/login?error=auth_failed");
+        }
+        
+        // Log the user in
+        req.login(user, (loginErr) => {
+          if (loginErr) {
+            console.error("Login error:", loginErr);
+            return res.redirect("/login?error=login_error");
+          }
+          
+          // Successful authentication
+          return res.redirect("/");
+        });
+      })(req, res, next);
+    }
   );
 
   app.get("/api/auth/user", (req, res) => {
