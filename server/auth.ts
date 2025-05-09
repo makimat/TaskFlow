@@ -4,12 +4,21 @@ import { storage } from './storage';
 
 export const setupAuth = () => {
   // Configure Passport to use Google OAuth
+  // Get URL from environment or determine dynamically
+  const appUrl = process.env.APP_URL || 
+    (process.env.REPL_SLUG && process.env.REPL_OWNER 
+      ? `https://${process.env.REPL_SLUG}.${process.env.REPL_OWNER}.repl.co`
+      : 'http://localhost:5000');
+  
+  const callbackURL = new URL('/api/auth/google/callback', appUrl).toString();
+  console.log(`Using callback URL: ${callbackURL}`);
+
   passport.use(
     new GoogleStrategy(
       {
         clientID: process.env.GOOGLE_CLIENT_ID || '',
         clientSecret: process.env.GOOGLE_CLIENT_SECRET || '',
-        callbackURL: '/api/auth/google/callback',
+        callbackURL,
         scope: ['profile', 'email'],
         // Allow only users from the workspace domain if specified
         ...(process.env.GOOGLE_WORKSPACE_DOMAIN && { hd: process.env.GOOGLE_WORKSPACE_DOMAIN }),
