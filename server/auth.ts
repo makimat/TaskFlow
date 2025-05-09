@@ -7,7 +7,7 @@ export const setupAuth = () => {
   // Get URL from environment or determine dynamically
   const appUrl = process.env.APP_URL || 
     (process.env.REPL_SLUG && process.env.REPL_OWNER 
-      ? `https://${process.env.REPL_SLUG}.${process.env.REPL_OWNER}.repl.co`
+      ? `https://${process.env.REPL_SLUG}.${process.env.REPL_OWNER}.replit.dev`
       : 'http://localhost:5000');
   
   const callbackURL = new URL('/api/auth/google/callback', appUrl).toString();
