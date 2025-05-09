@@ -1,4 +1,4 @@
-import type { Express, Request, Response } from "express";
+import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth, isAuthenticated } from "./auth";
@@ -9,7 +9,7 @@ import connectPgSimple from "connect-pg-simple";
 import memorystore from "memorystore";
 
 // Database session store setup
-let sessionStore;
+let sessionStore: session.Store;
 if (process.env.DATABASE_URL) {
   const PgStore = connectPgSimple(session);
   sessionStore = new PgStore({
