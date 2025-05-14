@@ -30,7 +30,7 @@ RUN npm ci --omit=dev
 
 # Copy built files from the build stage
 COPY --from=build /app/dist ./dist
-COPY --from=build /app/migrations ./migrations
+# COPY --from=build /app/migrations ./migrations
 
 # Set environment variables
 ENV NODE_ENV=production
